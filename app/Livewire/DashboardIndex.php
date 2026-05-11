@@ -26,7 +26,7 @@ class DashboardIndex extends Component
         
         // Cek apakah bobot AHP sudah ada (indikator konsistensi)
         $jumlahBobot = AhpBobot::count();
-        $statusAhp = $jumlahBobot > 0 ? 'KONSISTEN (Tersimpan)' : 'BELUM DIHITUNG';
+        $statusAhp = $jumlahBobot > 0 ? 'KONSISTEN' : 'BELUM DIHITUNG';
         $statusAhpColor = $jumlahBobot > 0 ? 'text-green-600' : 'text-red-600';
 
         // Hitung total siswa yang sudah masuk ke tahap akhir (Selesai Dinilai)
@@ -52,7 +52,7 @@ class DashboardIndex extends Component
         // Ambil 5 peringkat teratas
         $topSiswa = $topSiswaQuery->orderBy('peringkat', 'asc')->take(5)->get();
 
-        return view('livewire.dashboard-index', [
+        return view('livewire.dashboard.index', [
             'listKelas' => $listKelas,
             'listTahun' => $listTahun,
             'totalKriteria' => $totalKriteria,

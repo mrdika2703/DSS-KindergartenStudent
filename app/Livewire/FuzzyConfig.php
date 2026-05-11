@@ -6,7 +6,9 @@ use Livewire\Component;
 use App\Models\Kriteria;
 use App\Models\HimpunanFuzzy;
 use App\Models\FuzzyAturan;
+use Livewire\Attributes\Title;
 
+#[Title('Fuzzy')]
 class FuzzyConfig extends Component
 {
     public $tabAktif = 'himpunan';
@@ -146,7 +148,7 @@ class FuzzyConfig extends Component
             return $aturan;
         });
 
-        return view('livewire.fuzzy-config', [
+        return view('livewire.fuzzy.index', [
             'dataHimpunan' => $dataHimpunan,
             'dataAturan' => $dataAturan,
         ])->layout('layouts.app');

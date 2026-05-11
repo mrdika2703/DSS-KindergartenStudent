@@ -12,7 +12,9 @@ use App\Models\Penilaian;
 use App\Models\RaporMentah;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\PenilaianImport;
+use Livewire\Attributes\Title;
 
+#[Title('Penilaian')]
 class PenilaianSiswa extends Component
 {
     use WithFileUploads, WithPagination;
@@ -249,7 +251,7 @@ class PenilaianSiswa extends Component
     public function render()
     {
         // Ambil data siswa berdasarkan Filter Kelas & Tahun Ajaran
-        $siswas = Siswa::whereHas('penilaians')
+        $siswas = Siswa::query()
             ->when($this->filterKelas, function ($query) {
                 $query->where('kelas', $this->filterKelas);
             })
@@ -266,7 +268,7 @@ class PenilaianSiswa extends Component
         $listKelas = Siswa::select('kelas')->whereNotNull('kelas')->distinct()->pluck('kelas');
         $listTahun = Siswa::select('tahun_ajaran')->whereNotNull('tahun_ajaran')->distinct()->pluck('tahun_ajaran');
 
-        return view('livewire.penilaian-siswa', [
+        return view('livewire.penilaian.index', [
             'siswas' => $siswas,
             'kriterias' => $kriterias,
             'listKelas' => $listKelas,

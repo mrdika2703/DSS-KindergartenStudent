@@ -4,9 +4,9 @@ namespace App\Livewire\Auth;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
-// #[Layout('layouts.fullscreen-layout')]
+#[Title('Login')]
 class Login extends Component
 {
     public $email;

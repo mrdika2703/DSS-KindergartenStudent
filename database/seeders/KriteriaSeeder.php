@@ -24,7 +24,7 @@ class KriteriaSeeder extends Seeder
             ],
             [
                 'kode' => 'C3',
-                'nama_kriteria' => 'Capaian Perkembangan',
+                'nama_kriteria' => 'Capaian',
             ],
             [
                 'kode' => 'C4',

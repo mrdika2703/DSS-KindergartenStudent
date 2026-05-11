@@ -10,19 +10,24 @@ use App\Models\FuzzyAturan;
 use App\Models\HasilAkhir;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
+use Livewire\Attributes\Title;
 
+#[Title('Hasil')]
 class HasilAkhirIndex extends Component
 {
     use WithPagination;
     public $searchSiswa = '';
     public $filterKelas = '';
     public $filterTahunAjaran = '';
-    
+
     // Modal Detail
     public $isModalDetailOpen = false;
     public $detailSiswa = null;
 
-    public function updatingSearchSiswa() { $this->resetPage(); }
+    public function updatingSearchSiswa()
+    {
+        $this->resetPage();
+    }
 
     // --- FUNGSI MATEMATIS FUZZIFIKASI ---
     private function hitungKeanggotaan($x, $himpunan)
@@ -56,9 +61,15 @@ class HasilAkhirIndex extends Component
     // --- FUNGSI DEFUZZIFIKASI Z (Sesuai Proposal) ---
     private function hitungZRule($alpha, $kesimpulan)
     {
-        // Sangat Terampil: a=60, b=100 (Kurva Naik) => Z = a + alpha*(b-a)
-        if (strtolower($kesimpulan) == 'sangat terampil') {
-            return 60 + ($alpha * 40);
+        $kesimpulan = strtolower(trim($kesimpulan));
+
+        // Sangat Terampil: a=80, b=100 (Kurva Naik) => Z = a + alpha*(b-a)
+        if ($kesimpulan == 'sangat terampil') {
+            return 80 + ($alpha * 20);
+        }
+        // Terampil: a=60, b=80 (Kurva Naik) => Z = a + alpha*(b-a)
+        elseif ($kesimpulan == 'terampil') {
+            return 60 + ($alpha * 20);
         }
         // Cukup Terampil: a=0, b=60 (Kurva Turun) => Z = b - alpha*(b-a)
         else {
@@ -112,18 +123,18 @@ class HasilAkhirIndex extends Component
                     $log_kriteria = ['nilai_asli' => $nilai_x, 'bobot_ahp' => $w_kriteria, 'rules' => []];
 
                     // Cari aturan yang berkaitan dengan kriteria ini
-                    $aturan_kriteria = $aturans->filter(function($a) use ($k_id) {
+                    $aturan_kriteria = $aturans->filter(function ($a) use ($k_id) {
                         return isset($a->kondisi['kriteria_id']) && $a->kondisi['kriteria_id'] == $k_id;
                     });
 
                     foreach ($aturan_kriteria as $rule) {
                         $nama_himp = $rule->kondisi['himpunan'];
                         $himpunan = $himpunans[$k_id]->firstWhere('nama_himpunan', $nama_himp);
-                        
+
                         if ($himpunan) {
                             $alpha = $this->hitungKeanggotaan($nilai_x, $himpunan);
                             $z_rule = $this->hitungZRule($alpha, $rule->kesimpulan);
-                            
+
                             $pembilang += ($alpha * $z_rule);
                             $penyebut += $alpha;
 
@@ -140,17 +151,20 @@ class HasilAkhirIndex extends Component
                     // Z Parsial per Kriteria
                     $z_kriteria = $penyebut > 0 ? ($pembilang / $penyebut) : 0;
                     $log_kriteria['z_kriteria'] = round($z_kriteria, 4);
-                    
+
                     $rincian_log[$k_id] = $log_kriteria;
 
                     // Weighted Sum Aggregation (Z_kriteria * Bobot_AHP)
                     $final_z_score += ($z_kriteria * $w_kriteria);
                 }
 
-                // Tentukan Status (Misal: >= 80 Sangat Terampil, >=60 Terampil, <60 Kurang)
-                $status = 'Kurang Terampil';
-                if ($final_z_score >= 80) $status = 'Sangat Terampil';
-                elseif ($final_z_score >= 60) $status = 'Cukup Terampil';
+                // Tentukan Status (Sesuai rentang 3 Himpunan Output)
+                $status = 'Cukup Terampil'; // Default terendah (0 - 59)
+                if ($final_z_score >= 80) {
+                    $status = 'Sangat Terampil'; // (80 - 100)
+                } elseif ($final_z_score >= 60) {
+                    $status = 'Terampil'; // (60 - 79)
+                }
 
                 $hasilList[] = [
                     'siswa_id' => $siswa->id,
@@ -167,16 +181,15 @@ class HasilAkhirIndex extends Component
 
             // Update Peringkat
             $hasilTersimpan = HasilAkhir::whereIn('siswa_id', $siswaIds)
-                                        ->orderByDesc('total_skor_z')
-                                        ->get();
-            
+                ->orderByDesc('total_skor_z')
+                ->get();
+
             foreach ($hasilTersimpan as $index => $hasil) {
                 $hasil->update(['peringkat' => $index + 1]);
             }
 
             DB::commit();
             session()->flash('pesan', 'Perankingan berhasil dieksekusi menggunakan AHP dan Fuzzy Tsukamoto!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
@@ -195,12 +208,12 @@ class HasilAkhirIndex extends Component
         $listTahun = Siswa::select('tahun_ajaran')->whereNotNull('tahun_ajaran')->distinct()->pluck('tahun_ajaran');
 
         $hasilAkhir = HasilAkhir::with('siswa')
-            ->whereHas('siswa', function($q) {
+            ->whereHas('siswa', function ($q) {
                 // 1. Filter Kelas
                 if ($this->filterKelas) {
                     $q->where('kelas', $this->filterKelas);
                 }
-                
+
                 // 2. Filter Tahun Ajaran
                 if ($this->filterTahunAjaran) {
                     $q->where('tahun_ajaran', $this->filterTahunAjaran);
@@ -208,16 +221,16 @@ class HasilAkhirIndex extends Component
 
                 // 3. Filter Pencarian (Search)
                 if (!empty($this->searchSiswa)) {
-                    $q->where(function($query) {
+                    $q->where(function ($query) {
                         $query->where('nama_siswa', 'like', '%' . $this->searchSiswa . '%')
-                              ->orWhere('nis', 'like', '%' . $this->searchSiswa . '%');
+                            ->orWhere('nis', 'like', '%' . $this->searchSiswa . '%');
                     });
                 }
             })
             ->orderBy('total_skor_z', 'desc')
             ->paginate(15);
 
-        return view('livewire.hasil-akhir-index', [
+        return view('livewire.hasil.index', [
             'listKelas' => $listKelas,
             'listTahun' => $listTahun,
             'hasilAkhir' => $hasilAkhir

@@ -19,78 +19,38 @@ class FuzzyRulesSeeder extends Seeder
         $c3 = Kriteria::where('kode', 'C3')->first()->id; // Capaian
         $c4 = Kriteria::where('kode', 'C4')->first()->id; // Ekstrakurikuler
 
+        // PERBAIKAN: Format kondisi disesuaikan dengan Controller Livewire (Single-Antecedent)
+        // Kesimpulan disesuaikan dengan 3 Himpunan Output (Sangat Terampil, Terampil, Cukup Terampil)
         $rules = [
-            [
-                'kode' => 'R1',
-                'kondisi' => [$c1 => 'Tinggi', $c2 => 'Tinggi', $c3 => 'Tinggi', $c4 => 'Tinggi'],
-                'kesimpulan' => 'Sangat Terampil'
-            ],
-            [
-                'kode' => 'R2',
-                'kondisi' => [$c1 => 'Tinggi', $c2 => 'Sedang', $c3 => 'Tinggi', $c4 => 'Sedang'],
-                'kesimpulan' => 'Sangat Terampil'
-            ],
-            [
-                'kode' => 'R3',
-                'kondisi' => [$c1 => 'Sedang', $c2 => 'Tinggi', $c3 => 'Sedang', $c4 => 'Tinggi'],
-                'kesimpulan' => 'Terampil'
-            ],
-            [
-                'kode' => 'R4',
-                'kondisi' => [$c1 => 'Sedang', $c2 => 'Sedang', $c3 => 'Sedang', $c4 => 'Sedang'],
-                'kesimpulan' => 'Terampil'
-            ],
-            [
-                'kode' => 'R5',
-                'kondisi' => [$c1 => 'Rendah', $c2 => 'Tinggi', $c3 => 'Rendah', $c4 => 'Tinggi'],
-                'kesimpulan' => 'Cukup Terampil'
-            ],
-            [
-                'kode' => 'R6',
-                'kondisi' => [$c1 => 'Tinggi', $c2 => 'Rendah', $c3 => 'Tinggi', $c4 => 'Rendah'],
-                'kesimpulan' => 'Terampil'
-            ],
-            [
-                'kode' => 'R7',
-                'kondisi' => [$c1 => 'Sedang', $c2 => 'Rendah', $c3 => 'Sedang', $c4 => 'Rendah'],
-                'kesimpulan' => 'Cukup Terampil'
-            ],
-            [
-                'kode' => 'R8',
-                'kondisi' => [$c1 => 'Rendah', $c2 => 'Sedang', $c3 => 'Rendah', $c4 => 'Sedang'],
-                'kesimpulan' => 'Kurang Terampil'
-            ],
-            [
-                'kode' => 'R9',
-                'kondisi' => [$c1 => 'Rendah', $c2 => 'Rendah', $c3 => 'Rendah', $c4 => 'Rendah'],
-                'kesimpulan' => 'Kurang Terampil'
-            ],
-            [
-                'kode' => 'R10',
-                'kondisi' => [$c1 => 'Tinggi', $c2 => 'Tinggi', $c3 => 'Sedang', $c4 => 'Sedang'],
-                'kesimpulan' => 'Sangat Terampil'
-            ],
-            [
-                'kode' => 'R11',
-                'kondisi' => [$c1 => 'Sedang', $c2 => 'Sedang', $c3 => 'Tinggi', $c4 => 'Tinggi'],
-                'kesimpulan' => 'Terampil'
-            ],
-            [
-                'kode' => 'R12',
-                'kondisi' => [$c1 => 'Rendah', $c2 => 'Tinggi', $c3 => 'Tinggi', $c4 => 'Rendah'],
-                'kesimpulan' => 'Cukup Terampil'
-            ],
+            // --- Aturan Kriteria Akademik (C1) ---
+            ['kode' => 'R1',  'kondisi' => ['kriteria_id' => $c1, 'himpunan' => 'Tinggi'], 'kesimpulan' => 'Sangat Terampil'],
+            ['kode' => 'R2',  'kondisi' => ['kriteria_id' => $c1, 'himpunan' => 'Sedang'], 'kesimpulan' => 'Terampil'],
+            ['kode' => 'R3',  'kondisi' => ['kriteria_id' => $c1, 'himpunan' => 'Rendah'], 'kesimpulan' => 'Cukup Terampil'],
+
+            // --- Aturan Kriteria Absensi (C2) ---
+            ['kode' => 'R4',  'kondisi' => ['kriteria_id' => $c2, 'himpunan' => 'Tinggi'], 'kesimpulan' => 'Sangat Terampil'],
+            ['kode' => 'R5',  'kondisi' => ['kriteria_id' => $c2, 'himpunan' => 'Sedang'], 'kesimpulan' => 'Terampil'],
+            ['kode' => 'R6',  'kondisi' => ['kriteria_id' => $c2, 'himpunan' => 'Rendah'], 'kesimpulan' => 'Cukup Terampil'],
+
+            // --- Aturan Kriteria Capaian (C3) ---
+            ['kode' => 'R7',  'kondisi' => ['kriteria_id' => $c3, 'himpunan' => 'Tinggi'], 'kesimpulan' => 'Sangat Terampil'],
+            ['kode' => 'R8',  'kondisi' => ['kriteria_id' => $c3, 'himpunan' => 'Sedang'], 'kesimpulan' => 'Terampil'],
+            ['kode' => 'R9',  'kondisi' => ['kriteria_id' => $c3, 'himpunan' => 'Rendah'], 'kesimpulan' => 'Cukup Terampil'],
+
+            // --- Aturan Kriteria Ekstrakurikuler (C4) ---
+            ['kode' => 'R10', 'kondisi' => ['kriteria_id' => $c4, 'himpunan' => 'Tinggi'], 'kesimpulan' => 'Sangat Terampil'],
+            ['kode' => 'R11', 'kondisi' => ['kriteria_id' => $c4, 'himpunan' => 'Sedang'], 'kesimpulan' => 'Terampil'],
+            ['kode' => 'R12', 'kondisi' => ['kriteria_id' => $c4, 'himpunan' => 'Rendah'], 'kesimpulan' => 'Cukup Terampil'],
         ];
 
         foreach ($rules as $r) {
-            // Mengganti create() dengan updateOrCreate()
             FuzzyAturan::updateOrCreate(
-                // Array pertama: kriteria pencarian (cek apakah kode_aturan ini sudah ada?)
+                // Kriteria pencarian
                 ['kode_aturan' => $r['kode']], 
                 
-                // Array kedua: data yang akan di-update (jika sudah ada) atau di-insert (jika belum ada)
+                // Data yang akan di-update atau di-insert
                 [
-                    'kondisi' => $r['kondisi'],
+                    'kondisi' => $r['kondisi'], // Array ini akan otomatis menjadi JSON jika di model di-cast ke array
                     'kesimpulan' => $r['kesimpulan']
                 ]
             );
