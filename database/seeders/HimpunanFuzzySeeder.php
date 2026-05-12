@@ -36,7 +36,7 @@ class HimpunanFuzzySeeder extends Seeder
                 'kriteria_id' => $k->id,
                 'nama_himpunan' => 'Tinggi',
                 'batas_bawah' => 80,
-                'batas_tengah' => 90,
+                'batas_tengah' => 100,
                 'batas_atas' => 100,
             ]);
         }

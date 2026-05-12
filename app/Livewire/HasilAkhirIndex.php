@@ -17,8 +17,13 @@ class HasilAkhirIndex extends Component
 {
     use WithPagination;
     public $searchSiswa = '';
+    public $pilihKelas = '';
+    public $pilihTahunAjaran = '';
+    public $pilihSemester = '';
+
     public $filterKelas = '';
     public $filterTahunAjaran = '';
+    public $filterSemester = '';
 
     // Modal Detail
     public $isModalDetailOpen = false;
@@ -80,8 +85,8 @@ class HasilAkhirIndex extends Component
     // --- EKSEKUSI DSS ---
     public function prosesPerankingan()
     {
-        if (empty($this->filterKelas) || empty($this->filterTahunAjaran)) {
-            session()->flash('error', 'Pilih Kelas dan Tahun Ajaran terlebih dahulu untuk memulai proses!');
+        if (empty($this->pilihKelas) || empty($this->pilihTahunAjaran) || empty($this->pilihSemester)) {
+            session()->flash('error', 'Pilih Kelas, Tahun Ajaran, dan Semester terlebih dahulu untuk memulai proses!');
             return;
         }
 
@@ -95,9 +100,10 @@ class HasilAkhirIndex extends Component
         $aturans = FuzzyAturan::all();
 
         $siswas = Siswa::with('penilaians')
-            ->where('kelas', $this->filterKelas)
-            ->where('tahun_ajaran', $this->filterTahunAjaran)
-            ->whereHas('penilaians') // Hanya yang sudah dinilai
+            ->where('kelas', $this->pilihKelas)
+            ->where('tahun_ajaran', $this->pilihTahunAjaran)
+            ->where('semester', $this->pilihSemester)
+            ->whereHas('penilaians')
             ->get();
 
         DB::beginTransaction();
@@ -206,20 +212,27 @@ class HasilAkhirIndex extends Component
     {
         $listKelas = Siswa::select('kelas')->whereNotNull('kelas')->distinct()->pluck('kelas');
         $listTahun = Siswa::select('tahun_ajaran')->whereNotNull('tahun_ajaran')->distinct()->pluck('tahun_ajaran');
+        $listSemester = Siswa::select('semester')->whereNotNull('semester')->distinct()->pluck('semester');
 
         $hasilAkhir = HasilAkhir::with('siswa')
             ->whereHas('siswa', function ($q) {
-                // 1. Filter Kelas
+                
+                // 1. PERBAIKI: Gunakan $this->filterKelas
                 if ($this->filterKelas) {
                     $q->where('kelas', $this->filterKelas);
                 }
 
-                // 2. Filter Tahun Ajaran
+                // 2. PERBAIKI: Gunakan $this->filterTahunAjaran
                 if ($this->filterTahunAjaran) {
                     $q->where('tahun_ajaran', $this->filterTahunAjaran);
                 }
 
-                // 3. Filter Pencarian (Search)
+                // 3. PERBAIKI: Gunakan $this->filterSemester
+                if ($this->filterSemester) {
+                    $q->where('semester', $this->filterSemester);
+                }
+
+                // 4. Pencarian (Search)
                 if (!empty($this->searchSiswa)) {
                     $q->where(function ($query) {
                         $query->where('nama_siswa', 'like', '%' . $this->searchSiswa . '%')
@@ -233,7 +246,8 @@ class HasilAkhirIndex extends Component
         return view('livewire.hasil.index', [
             'listKelas' => $listKelas,
             'listTahun' => $listTahun,
-            'hasilAkhir' => $hasilAkhir
+            'hasilAkhir' => $hasilAkhir,
+            'listSemester' => $listSemester,
         ])->layout('layouts.app');
     }
 }

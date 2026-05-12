@@ -16,83 +16,62 @@
     class="p-6 mb-6 rounded-2xl border border-gray-200 bg-blue-50 pt-4 dark:border-gray-800 dark:bg-blue-950/5 hidden-print">
     <h3 class="mb-4 text-lg font-bold text-blue-800 dark:text-blue-400">1. Import Data dari Rapor (Excel)</h3>
     <form wire:submit.prevent="importExcel">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">Kelas <span
-                        class="text-red-500">*</span></label>
-                <div class="relative z-20 bg-transparent">
-                    <select wire:model="inputKelas"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                        :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
-                        @change="isOptionSelected = true">
-                        <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">Pilih Kelas
-                        </option>
-                        <option value="Kelas A">Kelas A</option>
-                        <option value="Kelas B">Kelas B</option>
-                    </select>
-                    <span
-                        class="pointer-events-none absolute top-1/2 right-4 z-30 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                        <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
-                                stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </span>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
-                @error('inputKelas') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
+            <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Kelas <span class="text-red-500">*</span>
+                </label>
+                <div class="relative z-20 bg-transparent">
+                    <input type="text" wire:model="inputKelas" placeholder="Contoh: KELAS A1"
+                        @input="$el.value = $el.value.toUpperCase()"
+                        class="uppercase dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 placeholder:normal-case focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                </div>
+                @error('inputKelas')
+                <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
                 @enderror
             </div>
+
             <div>
                 <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">
                     Tahun Ajaran <span class="text-red-500">*</span>
                 </label>
-
                 <div x-data="{
-                                showPicker: false,
-                                currentDecadeStart: Math.floor(new Date().getFullYear() / 10) * 10,
-                                selectedYear: null,
-                                displayValue: '',
-
-                                // Generate 12 grid tahun untuk ditampilkan
-                                get years() {
-                                    let y = [];
-                                    for (let i = 0; i < 12; i++) {
-                                        y.push(this.currentDecadeStart + i - 1);
-                                    }
-                                    return y;
-                                },
-
-                                init() {
-                                    // Ambil data dari Livewire jika dalam mode Edit
-                                    let current = $wire.inputTahunAjaran;
-                                    if (current && current.includes('/')) {
-                                        this.displayValue = current;
-                                        this.selectedYear = parseInt(current.split('/')[0]);
-                                        this.currentDecadeStart = Math.floor(this.selectedYear / 10) * 10;
-                                    }
-                                },
-
-                                selectYear(year) {
-                                    this.selectedYear = year;
-                                    // Otomatis bikin format 2024/2025
-                                    this.displayValue = year + '/' + (year + 1);
-                                    // Lempar ke Livewire
-                                    $wire.set('inputTahunAjaran', this.displayValue);
-                                    this.showPicker = false;
-                                },
-
-                                prevDecade() {
-                                    this.currentDecadeStart -= 10;
-                                },
-
-                                nextDecade() {
-                                    this.currentDecadeStart += 10;
-                                }
-                            }" class="relative w-full" @click.outside="showPicker = false">
+                    showPicker: false,
+                    currentDecadeStart: Math.floor(new Date().getFullYear() / 10) * 10,
+                    selectedYear: null,
+                    displayValue: @entangle('inputTahunAjaran'),
+                    get years() {
+                        let y = [];
+                        for (let i = 0; i < 12; i++) {
+                            y.push(this.currentDecadeStart + i - 1);
+                        }
+                        return y;
+                    },
+                    init() {
+                        let current = $wire.inputTahunAjaran;
+                        if (current && current.includes('/')) {
+                            this.displayValue = current;
+                            this.selectedYear = parseInt(current.split('/')[0]);
+                            this.currentDecadeStart = Math.floor(this.selectedYear / 10) * 10;
+                        }
+                    },
+                    selectYear(year) {
+                        this.selectedYear = year;
+                        this.displayValue = year + '/' + (year + 1);
+                        $wire.set('inputTahunAjaran', this.displayValue);
+                        this.showPicker = false;
+                    },
+                    prevDecade() {
+                        this.currentDecadeStart -= 10;
+                    },
+                    nextDecade() {
+                        this.currentDecadeStart += 10;
+                    }
+                }" class="relative w-full" @click.outside="showPicker = false">
 
                     <div class="relative custom-datepicker" @click="showPicker = !showPicker">
-                        <input type="text" readonly x-model="displayValue" placeholder="Pilih Tahun Ajaran"
+                        <input type="text" readonly x-model="displayValue" placeholder="Pilih Tahun"
                             class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pl-10 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 border-gray-300 focus:border-blue-300 focus:ring-blue-500/20 dark:border-gray-700 dark:focus:border-blue-800 cursor-pointer" />
                         <span
                             class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500 dark:text-gray-400">
@@ -115,7 +94,6 @@
 
                     <div x-show="showPicker" x-transition style="display: none;"
                         class="absolute left-0 z-[99] w-64 p-4 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl top-full dark:bg-gray-800 dark:border-gray-700">
-
                         <div class="flex items-center justify-between mb-4">
                             <button type="button" @click.stop="prevDecade"
                                 class="p-1.5 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition">
@@ -134,7 +112,6 @@
                                 </svg>
                             </button>
                         </div>
-
                         <div class="grid grid-cols-3 gap-2">
                             <template x-for="year in years" :key="year">
                                 <button type="button" @click="selectYear(year)"
@@ -146,19 +123,45 @@
                         </div>
                     </div>
                 </div>
+                @error('inputTahunAjaran') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+            </div>
 
-                @error('inputTahunAjaran') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
-                @enderror
-            </div>
             <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">File Rapor Excel
-                    <span class="text-red-500">*</span></label>
-                <input type="file" wire:model="fileExcel" accept=".xlsx, .xls, .csv"
-                    placeholder="Klik untuk memilih file"
-                    class="focus:border-ring-brand-300 shadow-theme-xs focus:file:ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-gray-50 file:py-3 file:pr-3 file:pl-3.5 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400" />
-                @error('fileExcel') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Semester <span class="text-red-500">*</span>
+                </label>
+                <div class="relative z-20 bg-transparent" x-data="{ isOptionSelected: false }">
+                    <select wire:model="inputSemester"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                        :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
+                        @change="isOptionSelected = true">
+                        <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">Pilih</option>
+                        <option value="1">1 (Ganjil)</option>
+                        <option value="2">2 (Genap)</option>
+                    </select>
+                    <span
+                        class="pointer-events-none absolute top-1/2 right-4 z-30 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                        <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </div>
+                @error('inputSemester')
+                <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
                 @enderror
             </div>
+
+            <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-400">
+                    File Rapor Excel <span class="text-red-500">*</span>
+                </label>
+                <input type="file" wire:model="fileExcel" accept=".xlsx, .xls, .csv"
+                    class="focus:border-ring-brand-300 shadow-theme-xs focus:file:ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-gray-50 file:py-3 file:pr-3 file:pl-3.5 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400" />
+                @error('fileExcel') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+            </div>
+
         </div>
 
         <div class="flex justify-end mt-2">
@@ -166,8 +169,7 @@
                 class="flex items-center justify-center px-6 py-2.5 font-bold text-white bg-green-600 rounded-lg shadow hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition disabled:opacity-70 disabled:cursor-wait">
                 <svg wire:loading wire:target="fileExcel, importExcel" class="w-5 h-5 mr-2 text-white animate-spin"
                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                    </circle>
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                     </path>
@@ -231,7 +233,7 @@
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
                 <div @click.outside="showResetModal = false"
-                    class="w-full max-w-sm p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl dark:border-gray-700 dark:bg-gray-900 transform transition-all"
+                    class="w-full max-w-md p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl dark:border-gray-700 dark:bg-gray-900 transform transition-all"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -239,33 +241,102 @@
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
 
-                    <div
-                        class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full dark:bg-red-900/30">
-                        <svg class="w-6 h-6 text-red-600 dark:text-red-500" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
+                    <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full dark:bg-red-900/30">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
 
                     <h3 class="mb-2 text-lg font-bold text-center text-gray-800 dark:text-white/90">
-                        Reset Semua Data?
+                        Pilih Target Reset Data
                     </h3>
-                    <p class="mb-6 text-sm text-center text-gray-500 dark:text-gray-400">
-                        Peringatan Keras! Tindakan ini tidak dapat dibatalkan. Semua data siswa, nilai rapor,
-                        dan hasil perhitungan akan dihapus permanen.
+                    <p class="mb-5 text-sm text-center text-gray-500 dark:text-gray-400">
+                        Tentukan data mana yang ingin Anda hapus secara permanen.
                     </p>
+
+                    <div class="flex flex-col gap-3 mb-5">
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                            <input type="radio" wire:model.live="modeReset" value="spesifik" class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Hapus Data Spesifik (Pilih Kelas/Tahun)</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-red-200 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:hover:bg-red-900/30 transition-colors">
+                            <input type="radio" wire:model.live="modeReset" value="semua" class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-3 text-sm font-bold text-red-700 dark:text-red-400">Hapus Seluruh Data (Semua Kelas & Tahun)</span>
+                        </label>
+                    </div>
+
+                    @if($modeReset == 'spesifik')
+                    <div class="p-4 mb-5 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700 space-y-3">
+                        
+                        <div x-data="{ isOptionSelected: false }" class="relative bg-transparent">
+                            <select wire:model="resetKelas"
+                                class="dark:bg-dark-900 shadow-theme-xs focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50h-10 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
+                                @change="isOptionSelected = true">
+                                <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">Semua Kelas
+                                </option>
+                                @foreach($listKelas as $lk) <option value="{{ $lk }}">{{ $lk }}</option> @endforeach
+                            </select>
+                            <span
+                                class="pointer-events-none absolute top-1/2 right-3 z-30 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                                <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </div>
+
+                        <div x-data="{ isOptionSelected: false }" class="relative bg-transparent">
+                            <select wire:model="resetTahun"
+                                class="dark:bg-dark-900 shadow-theme-xs focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50h-10 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
+                                @change="isOptionSelected = true">
+                                <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">Semua Tahun Ajaran
+                                </option>
+                                @foreach($listTahun as $lt) <option value="{{ $lt }}">{{ $lt }}</option> @endforeach
+                            </select>
+                            <span
+                                class="pointer-events-none absolute top-1/2 right-3 z-30 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                                <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </div>
+
+                        <div x-data="{ isOptionSelected: false }" class="relative bg-transparent">
+                            <select wire:model="resetSemester"
+                                class="dark:bg-dark-900 shadow-theme-xs focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50h-10 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
+                                @change="isOptionSelected = true">
+                                <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">Semua Semester
+                                </option>
+                                @foreach($listSemester as $ls) <option value="{{ $ls }}">{{ $ls }}</option> @endforeach
+                            </select>
+                            <span
+                                class="pointer-events-none absolute top-1/2 right-3 z-30 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                                <svg class="stroke-current" width="16" height="16" viewBox="0 0 20 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </div>
+                        <p class="text-xs text-amber-600 dark:text-amber-500 font-medium mt-1">*Jika dikosongkan, semua data pada kategori tersebut akan dihapus.</p>
+                    </div>
+                    @endif
 
                     <div class="flex justify-center space-x-3">
                         <button @click="showResetModal = false" type="button"
                             class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors w-1/2">
                             Batal
                         </button>
-                        <button @click="$wire.resetDataSiswa(); showResetModal = false" type="button"
+                        <button @click="$wire.eksekusiReset(); showResetModal = false" type="button"
                             class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-lg shadow-sm hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-colors w-1/2 flex items-center justify-center">
-                            <span wire:loading.remove wire:target="resetDataSiswa">Ya, Reset</span>
-                            <span wire:loading wire:target="resetDataSiswa">Proses...</span>
+                            <span wire:loading.remove wire:target="eksekusiReset">Ya, Reset</span>
+                            <span wire:loading wire:target="eksekusiReset">Proses...</span>
                         </button>
                     </div>
                 </div>

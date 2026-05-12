@@ -14,11 +14,13 @@ class PenilaianImport implements ToCollection, WithHeadingRow
 {
     protected $kelas;
     protected $tahun_ajaran;
+    protected $semester;
 
-    public function __construct($kelas, $tahun_ajaran)
+    public function __construct($kelas, $tahun_ajaran, $semester)
     {
         $this->kelas = $kelas;
         $this->tahun_ajaran = $tahun_ajaran;
+        $this->semester = $semester;
     }
 
     private function konversiHuruf($huruf)
@@ -41,18 +43,16 @@ class PenilaianImport implements ToCollection, WithHeadingRow
         foreach ($rows as $row) {
             if (!isset($row['nisn'])) continue;
 
-            // PERBAIKAN KRUSIAL: Jadikan NISN dan Tahun Ajaran sebagai Kunci Utama
-            // Dengan begini, 1 Siswa bisa punya data di TA 2024 dan TA 2025 tanpa saling menimpa
             $siswa = Siswa::updateOrCreate(
                 [
                     'nis' => $row['nisn'],
-                    'tahun_ajaran' => $this->tahun_ajaran // <-- Ditambahkan ke sini
+                    'tahun_ajaran' => $this->tahun_ajaran,
+                    'semester' => $this->semester
                 ],
                 [
                     'nama_siswa' => strtoupper($row['nama']),
                     'jenis_kelamin' => (strpos(strtolower($row['jk']), 'laki') !== false) ? 'L' : 'P',
                     'kelas' => $this->kelas
-                    // tahun_ajaran dihapus dari sini karena sudah jadi kunci di array atas
                 ]
             );
 

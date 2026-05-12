@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('siswas', function (Blueprint $table) {
             $table->id();
-            $table->string('nis')->unique();
+            $table->string('nis');
             $table->string('nama_siswa');
             $table->enum('jenis_kelamin', ['L', 'P']);
+            $table->string('kelas')->nullable();
+            $table->string('tahun_ajaran')->nullable();
+            $table->tinyInteger('semester')->nullable();
             $table->timestamps();
         });
     }

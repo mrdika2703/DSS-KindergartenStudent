@@ -40,7 +40,7 @@
                         <th class="px-5 py-3 font-medium text-theme-sm text-center">a (Bawah)</th>
                         <th class="px-5 py-3 font-medium text-theme-sm text-center">b (Tengah)</th>
                         <th class="px-5 py-3 font-medium text-theme-sm text-center">c (Atas)</th>
-                        <th class="px-5 py-3 font-medium text-theme-sm text-center w-28">Aksi</th>
+                        {{-- <th class="px-5 py-3 font-medium text-theme-sm text-center w-28">Aksi</th> --}}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -63,7 +63,7 @@
                             $h->batas_tengah ?? '-' }}</td>
                         <td class="px-5 py-4 text-sm font-mono text-center text-gray-600 dark:text-gray-400">{{
                             $h->batas_atas }}</td>
-                        <td class="px-5 py-4 whitespace-nowrap text-center">
+                        {{-- <td class="px-5 py-4 whitespace-nowrap text-center">
                             <button wire:key="btn-edit-himpunan-{{ $h->id }}" wire:click="editHimpunan({{ $h->id }})"
                                 wire:loading.attr="disabled" wire:target="editHimpunan({{ $h->id }})"
                                 class="inline-flex items-center justify-center min-w-[70px] px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500/30 transition-colors disabled:opacity-70 disabled:cursor-wait">
@@ -79,7 +79,7 @@
                                 <span wire:loading.remove wire:target="editHimpunan({{ $h->id }})">Edit Range</span>
                                 <span wire:loading wire:target="editHimpunan({{ $h->id }})">Loading...</span>
                             </button>
-                        </td>
+                        </td> --}}
                     </tr>
                     @empty
                     <tr>
@@ -106,7 +106,7 @@
             <strong class="font-bold">Format Aturan:</strong> <span class="font-mono text-xs">IF (Kriteria) is
                 (Himpunan) THEN (Kesimpulan)</span>
         </div>
-        <button wire:click="bukaModalAturan" wire:loading.attr="disabled"
+        {{-- <button wire:click="bukaModalAturan" wire:loading.attr="disabled"
             class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors whitespace-nowrap">
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +114,7 @@
                 </path>
             </svg>
             Tambah Aturan
-        </button>
+        </button> --}}
     </div>
 
     <!-- Table Wrapper -->
@@ -127,7 +127,7 @@
                         <th class="px-5 py-3 font-medium text-theme-sm w-20">ID</th>
                         <th class="px-5 py-3 font-medium text-theme-sm">Kriteria Terkait</th>
                         <th class="px-5 py-3 font-medium text-theme-sm">Logika (IF ... THEN)</th>
-                        <th class="px-5 py-3 font-medium text-theme-sm text-center w-36">Aksi</th>
+                        {{-- <th class="px-5 py-3 font-medium text-theme-sm text-center w-36">Aksi</th> --}}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -147,7 +147,7 @@
                                 class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-bold text-xs mx-1 text-gray-600 dark:text-gray-400">THEN</span>
                             <span class="font-bold text-green-600 dark:text-green-400">{{ $a->kesimpulan }}</span>
                         </td>
-                        <td class="px-5 py-4 whitespace-nowrap text-center">
+                        {{-- <td class="px-5 py-4 whitespace-nowrap text-center">
                             <div class="flex items-center justify-center space-x-2">
                                 <!-- Edit Button -->
                                 <button wire:key="btn-edit-aturan-{{ $a->id }}"
@@ -167,7 +167,7 @@
                                     <span wire:loading wire:target="hapusAturan({{ $a->id }})">Wait</span>
                                 </button>
                             </div>
-                        </td>
+                        </td> --}}
                     </tr>
                     @empty
                     <tr>

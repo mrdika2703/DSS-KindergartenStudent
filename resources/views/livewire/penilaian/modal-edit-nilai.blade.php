@@ -20,7 +20,7 @@
                 </div>
 
                 <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">Siswa: <strong
-                        class="text-blue-600 dark:text-blue-400 text-base">{{ $nama_siswa_aktif }}</strong>.
+                        class="text-blue-600 dark:text-blue-400 text-base">{{ $nama_siswa_aktif }} / {{ $semester_aktif }}</strong>.
                     <br>Ubah huruf rata-rata atau masukkan angka untuk mengubah penilaian (x).
                 </p>
 

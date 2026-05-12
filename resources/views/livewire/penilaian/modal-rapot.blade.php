@@ -21,7 +21,7 @@
 
                 <div class="mb-4">
                     <p class="text-sm text-gray-600 dark:text-gray-400">Siswa: <strong
-                            class="text-blue-600 dark:text-blue-400 text-base">{{ $nama_siswa_aktif }}</strong></p>
+                            class="text-blue-600 dark:text-blue-400 text-base">{{ $nama_siswa_aktif }} / {{ $semester_aktif }}</strong></p>
                 </div>
 
                 <div
