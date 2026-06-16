@@ -11,6 +11,7 @@ class HimpunanFuzzySeeder extends Seeder
     public function run(): void
     {
         $kriterias = Kriteria::all();
+        \Illuminate\Support\Facades\DB::table('himpunan_fuzzies')->truncate();
 
         foreach ($kriterias as $k) {
             // Himpunan RENDAH (Kurva Turun)
@@ -23,19 +24,21 @@ class HimpunanFuzzySeeder extends Seeder
             ]);
 
             // Himpunan SEDANG (Kurva Segitiga)
+            // PERBAIKAN: Ekor kurva diperpanjang hingga 100 agar beririsan sempurna
             HimpunanFuzzy::create([
                 'kriteria_id' => $k->id,
                 'nama_himpunan' => 'Sedang',
-                'batas_bawah' => 50,
-                'batas_tengah' => 70,
-                'batas_atas' => 85,
+                'batas_bawah' => 40,
+                'batas_tengah' => 60,
+                'batas_atas' => 100,
             ]);
 
             // Himpunan TINGGI (Kurva Naik)
+            // PERBAIKAN: Kurva baru mencapai puncak mutlak di angka 100
             HimpunanFuzzy::create([
                 'kriteria_id' => $k->id,
                 'nama_himpunan' => 'Tinggi',
-                'batas_bawah' => 80,
+                'batas_bawah' => 60,
                 'batas_tengah' => 100,
                 'batas_atas' => 100,
             ]);

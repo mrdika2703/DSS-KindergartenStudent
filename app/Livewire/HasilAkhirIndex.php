@@ -64,20 +64,26 @@ class HasilAkhirIndex extends Component
     }
 
     // --- FUNGSI DEFUZZIFIKASI Z (Sesuai Proposal) ---
-    private function hitungZRule($alpha, $kesimpulan)
+    private function hitungZRule($alpha, $kesimpulan, $x)
     {
         $kesimpulan = strtolower(trim($kesimpulan));
 
-        // Sangat Terampil: a=80, b=100 (Kurva Naik) => Z = a + alpha*(b-a)
         if ($kesimpulan == 'sangat terampil') {
+            // Sangat Terampil selalu Kurva Naik
             return 80 + ($alpha * 20);
-        }
-        // Terampil: a=60, b=80 (Kurva Naik) => Z = a + alpha*(b-a)
-        elseif ($kesimpulan == 'terampil') {
-            return 60 + ($alpha * 20);
-        }
-        // Cukup Terampil: a=0, b=60 (Kurva Turun) => Z = b - alpha*(b-a)
-        else {
+        } elseif ($kesimpulan == 'terampil') {
+            // KUNCI PERBAIKAN: Pisahkan lereng agar Z selalu berbanding lurus dengan nilai asli
+            if ($x > 60) {
+                // Jika x di atas 60 (Lereng Turun pada input Sedang)
+                // Maka Output Z harus pakai rumus Kurva Turun (100 ke 60)
+                return 100 - ($alpha * 40);
+            } else {
+                // Jika x di bawah 60 (Lereng Naik pada input Sedang)
+                // Maka Output Z pakai rumus Kurva Naik (60 ke 80)
+                return 60 + ($alpha * 20);
+            }
+        } else {
+            // Cukup Terampil selalu Kurva Turun
             return 60 - ($alpha * 60);
         }
     }
@@ -96,6 +102,9 @@ class HasilAkhirIndex extends Component
             return;
         }
 
+        // PENCEGAHAN OVER-SCORE: Hitung total bobot untuk menormalkan AHP (mengatasi pembulatan 1.002)
+        $totalBobotAHP = $bobotAhp->sum('bobot_eigen');
+
         $himpunans = HimpunanFuzzy::all()->groupBy('kriteria_id');
         $aturans = FuzzyAturan::all();
 
@@ -108,7 +117,6 @@ class HasilAkhirIndex extends Component
 
         DB::beginTransaction();
         try {
-            // Hapus hasil lama untuk kelas & tahun ajaran ini
             $siswaIds = $siswas->pluck('id')->toArray();
             HasilAkhir::whereIn('siswa_id', $siswaIds)->delete();
 
@@ -118,17 +126,18 @@ class HasilAkhirIndex extends Component
                 $rincian_log = [];
                 $final_z_score = 0;
 
-                // Loop setiap kriteria untuk mengevaluasi aturan (Single-Antecedent)
                 foreach ($siswa->penilaians as $penilaian) {
                     $k_id = $penilaian->kriteria_id;
                     $nilai_x = $penilaian->nilai;
-                    $w_kriteria = $bobotAhp[$k_id]->bobot_eigen ?? 0;
 
-                    $pembilang = 0; // Sum (alpha * z)
-                    $penyebut = 0;  // Sum (alpha)
+                    // NORMALISASI BOBOT: Memastikan jumlah semua bobot persis 1.0
+                    $bobot_mentah = $bobotAhp[$k_id]->bobot_eigen ?? 0;
+                    $w_kriteria = $totalBobotAHP > 0 ? ($bobot_mentah / $totalBobotAHP) : 0;
+
+                    $pembilang = 0;
+                    $penyebut = 0;
                     $log_kriteria = ['nilai_asli' => $nilai_x, 'bobot_ahp' => $w_kriteria, 'rules' => []];
 
-                    // Cari aturan yang berkaitan dengan kriteria ini
                     $aturan_kriteria = $aturans->filter(function ($a) use ($k_id) {
                         return isset($a->kondisi['kriteria_id']) && $a->kondisi['kriteria_id'] == $k_id;
                     });
@@ -139,7 +148,9 @@ class HasilAkhirIndex extends Component
 
                         if ($himpunan) {
                             $alpha = $this->hitungKeanggotaan($nilai_x, $himpunan);
-                            $z_rule = $this->hitungZRule($alpha, $rule->kesimpulan);
+
+                            // LEMPAR $nilai_x KE DALAM FUNGSI UNTUK MENCEGAH PARADOKS
+                            $z_rule = $this->hitungZRule($alpha, $rule->kesimpulan, $nilai_x);
 
                             $pembilang += ($alpha * $z_rule);
                             $penyebut += $alpha;
@@ -154,22 +165,24 @@ class HasilAkhirIndex extends Component
                         }
                     }
 
-                    // Z Parsial per Kriteria
                     $z_kriteria = $penyebut > 0 ? ($pembilang / $penyebut) : 0;
                     $log_kriteria['z_kriteria'] = round($z_kriteria, 4);
 
                     $rincian_log[$k_id] = $log_kriteria;
 
-                    // Weighted Sum Aggregation (Z_kriteria * Bobot_AHP)
                     $final_z_score += ($z_kriteria * $w_kriteria);
                 }
 
-                // Tentukan Status (Sesuai rentang 3 Himpunan Output)
-                $status = 'Cukup Terampil'; // Default terendah (0 - 59)
+                // Capping keamanan agar nilai tidak pernah bocor melampaui 100
+                if ($final_z_score > 100) {
+                    $final_z_score = 100;
+                }
+
+                $status = 'Cukup Terampil';
                 if ($final_z_score >= 80) {
-                    $status = 'Sangat Terampil'; // (80 - 100)
+                    $status = 'Sangat Terampil';
                 } elseif ($final_z_score >= 60) {
-                    $status = 'Terampil'; // (60 - 79)
+                    $status = 'Terampil';
                 }
 
                 $hasilList[] = [
@@ -182,10 +195,8 @@ class HasilAkhirIndex extends Component
                 ];
             }
 
-            // Insert data baru
             HasilAkhir::insert($hasilList);
 
-            // Update Peringkat
             $hasilTersimpan = HasilAkhir::whereIn('siswa_id', $siswaIds)
                 ->orderByDesc('total_skor_z')
                 ->get();
@@ -201,38 +212,104 @@ class HasilAkhirIndex extends Component
             session()->flash('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
-
     public function bukaDetail($siswa_id)
     {
         $this->detailSiswa = HasilAkhir::with('siswa.penilaians.kriteria')->where('siswa_id', $siswa_id)->first();
         $this->isModalDetailOpen = true;
     }
 
+    public function cetakLaporan()
+    {
+        // 1. Tentukan parameter pencarian (prioritaskan filter, jika kosong gunakan pilihan dropdown)
+        $kelas = $this->filterKelas ?: $this->pilihKelas;
+        $tahun = $this->filterTahunAjaran ?: $this->pilihTahunAjaran;
+        $semester = $this->filterSemester ?: $this->pilihSemester;
+
+        // 2. Validasi: Pastikan parameter tidak kosong
+        if (empty($kelas) || empty($tahun) || empty($semester)) {
+            session()->flash('error', 'Pilih Kelas, Tahun Ajaran, dan Semester terlebih dahulu sebelum mencetak!');
+            return;
+        }
+
+        // 3. Validasi Data: Cek apakah hasil akhir sudah ada/dihitung di database
+        $dataSudahDihitung = \App\Models\HasilAkhir::whereHas('siswa', function ($query) use ($kelas, $tahun, $semester) {
+            $query->where('kelas', $kelas)
+                ->where('tahun_ajaran', $tahun)
+                ->where('semester', $semester);
+        })->exists();
+
+        // Jika belum ada data (belum dihitung), tolak cetak dan tampilkan error
+        if (!$dataSudahDihitung) {
+            session()->flash('error', 'Data belum dihitung! Silakan klik tombol "Mulai Hitung" terlebih dahulu.');
+            return;
+        }
+
+        // 4. Jika lolos validasi, buat URL cetak
+        $url = route('cetak.hasil', [
+            'kelas' => $kelas,
+            'tahun' => $tahun,
+            'semester' => $semester
+        ]);
+
+        // 5. Kirim event ke frontend untuk membuka tab baru
+        $this->dispatch('buka-tab-cetak', url: $url);
+    }
+
+    public function updatedPilihKelas()
+    {
+        // Jika Kelas diganti, reset Tahun Ajaran dan Semester
+        $this->pilihTahunAjaran = '';
+        $this->pilihSemester = '';
+    }
+
+    public function updatedPilihTahunAjaran()
+    {
+        // Jika Tahun Ajaran diganti, reset Semester
+        $this->pilihSemester = '';
+    }
+
+    // --- FUNGSI RENDER ---
     public function render()
     {
+        // 1. Ambil List Kelas (Selalu Tampil Semua)
         $listKelas = Siswa::select('kelas')->whereNotNull('kelas')->distinct()->pluck('kelas');
-        $listTahun = Siswa::select('tahun_ajaran')->whereNotNull('tahun_ajaran')->distinct()->pluck('tahun_ajaran');
-        $listSemester = Siswa::select('semester')->whereNotNull('semester')->distinct()->pluck('semester');
 
+        // 2. Ambil List Tahun Ajaran (HANYA BERDASARKAN KELAS YANG DIPILIH)
+        $listTahun = collect();
+        if (!empty($this->pilihKelas)) {
+            $listTahun = Siswa::where('kelas', $this->pilihKelas)
+                ->select('tahun_ajaran')
+                ->whereNotNull('tahun_ajaran')
+                ->distinct()
+                ->pluck('tahun_ajaran');
+        }
+
+        // 3. Ambil List Semester (HANYA BERDASARKAN KELAS & TAHUN AJARAN YANG DIPILIH)
+        $listSemester = collect();
+        if (!empty($this->pilihKelas) && !empty($this->pilihTahunAjaran)) {
+            $listSemester = Siswa::where('kelas', $this->pilihKelas)
+                ->where('tahun_ajaran', $this->pilihTahunAjaran)
+                ->select('semester')
+                ->whereNotNull('semester')
+                ->distinct()
+                ->pluck('semester');
+        }
+
+        // 4. Query Data Tabel Hasil Akhir
         $hasilAkhir = HasilAkhir::with('siswa')
             ->whereHas('siswa', function ($q) {
-                
-                // 1. PERBAIKI: Gunakan $this->filterKelas
+
+                // Gunakan properti filter tabel Anda
                 if ($this->filterKelas) {
                     $q->where('kelas', $this->filterKelas);
                 }
-
-                // 2. PERBAIKI: Gunakan $this->filterTahunAjaran
                 if ($this->filterTahunAjaran) {
                     $q->where('tahun_ajaran', $this->filterTahunAjaran);
                 }
-
-                // 3. PERBAIKI: Gunakan $this->filterSemester
                 if ($this->filterSemester) {
                     $q->where('semester', $this->filterSemester);
                 }
 
-                // 4. Pencarian (Search)
                 if (!empty($this->searchSiswa)) {
                     $q->where(function ($query) {
                         $query->where('nama_siswa', 'like', '%' . $this->searchSiswa . '%')

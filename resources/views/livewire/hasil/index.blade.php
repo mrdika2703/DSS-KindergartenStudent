@@ -30,3 +30,12 @@
     </style>
 
 </div>
+
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        // HANYA untuk membuka tab baru saat URL berhasil dibuat
+        Livewire.on('buka-tab-cetak', (event) => {
+            window.open(event.url, '_blank');
+        });
+    });
+</script>

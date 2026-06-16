@@ -9,6 +9,7 @@ use App\Livewire\HasilAkhirIndex;
 use App\Livewire\DashboardIndex;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CetakController;
 
 Route::middleware(['guest'])->group(function () {
     // Route::view('/', 'welcome')->name('home');
@@ -23,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/konfigurasi-fuzzy', FuzzyConfig::class)->name('fuzzy.index');
     Route::get('/penilaian-siswa', PenilaianSiswa::class)->name('penilaian.index');
     Route::get('/hasil-akhir', HasilAkhirIndex::class)->name('hasil.index');
+    Route::get('/cetak/hasil-akhir', [CetakController::class, 'hasilAkhir'])->name('cetak.hasil');
 });
 Route::post('/logout', function () {
     Auth::logout();
