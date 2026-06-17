@@ -21,9 +21,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            KriteriaSeeder::class, FuzzyDataSeeder::class, HimpunanFuzzySeeder::class, UserSeeder::class, FuzzyRulesSeeder::class
-            // Anda juga bisa menambahkan seeder lain di sini nanti, 
-            // misalnya UserSeeder untuk akun Kepala Sekolah dan Guru
+            KriteriaSeeder::class,
+            HimpunanFuzzySeeder::class,
+            UserSeeder::class,
+            FuzzyRulesSeeder::class,
+            AhpSeeder::class,
         ]);
     }
 }

@@ -6,7 +6,9 @@ use Livewire\Component;
 use App\Models\Kriteria;
 use App\Models\AhpBobot;
 use App\Models\AhpMatriks;
+use Livewire\Attributes\Title;
 
+#[Title('AHP')]
 class AhpCalculation extends Component
 {
     public $kriterias = [];
@@ -48,7 +50,7 @@ class AhpCalculation extends Component
         }
     }
 
-    public function hitungBobot()
+    public function hitungBobot1()
     {
         $n = count($this->kriterias);
         if ($n < 3) {
@@ -118,7 +120,7 @@ class AhpCalculation extends Component
         }
     }
 
-    public function hitungBobot1()
+    public function hitungBobot()
     {
         $n = count($this->kriterias);
         if ($n < 3) {
@@ -235,6 +237,6 @@ class AhpCalculation extends Component
 
     public function render()
     {
-        return view('livewire.ahp-calculation')->layout('layouts.app');
+        return view('livewire.ahp.index')->layout('layouts.app');
     }
 }

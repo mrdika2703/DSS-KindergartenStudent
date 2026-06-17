@@ -136,7 +136,7 @@
                                             <svg x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen"
                                                 class="ml-auto w-5 h-5 transition-transform duration-200"
                                                 :class="{
-                                                    'rotate-180 text-purple-600': isSubmenuOpen({{ $groupIndex }},
+                                                    'rotate-180 text-pink-50': isSubmenuOpen({{ $groupIndex }},
                                                         {{ $itemIndex }})
                                                 }"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">

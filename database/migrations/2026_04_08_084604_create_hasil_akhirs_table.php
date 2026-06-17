@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('hasil_akhirs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswas')->cascadeOnDelete();
-            $table->decimal('total_skor_z', 8, 4); // Skor tegas defuzzifikasi
+            $table->decimal('total_skor_z', 8, 4);
             $table->integer('peringkat')->nullable();
+            $table->string('status')->nullable();
+            $table->json('rincian')->nullable();
             $table->timestamps();
         });
     }
