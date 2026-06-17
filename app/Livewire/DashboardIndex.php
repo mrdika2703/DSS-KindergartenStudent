@@ -53,8 +53,8 @@ class DashboardIndex extends Component
 
         $totalSiswaDinilai = $querySiswa->count();
         
-        // Ambil 5 peringkat teratas
-        $topSiswa = $topSiswaQuery->orderBy('peringkat', 'asc')->take(5)->get();
+        // Ambil 5 peringkat teratas berdasarkan total skor Z tertinggi
+        $topSiswa = $topSiswaQuery->orderBy('total_skor_z', 'desc')->take(5)->get();
 
         return view('livewire.dashboard.index', [
             'listKelas' => $listKelas,

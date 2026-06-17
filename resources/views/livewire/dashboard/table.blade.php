@@ -164,10 +164,10 @@
                     @forelse ($topSiswa as $hasil)
                     <tr>
                         <td class="px-6 py-3 text-base font-medium text-gray-700">
-                            @if($hasil->peringkat == 1) <span class="text-yellow-500">1</span>
-                            @elseif($hasil->peringkat == 2) <span class="text-gray-400">2</span>
-                            @elseif($hasil->peringkat == 3) <span class="text-orange-500">3</span>
-                            @else <span class="ml-2">{{ $hasil->peringkat }}</span>
+                            @if($loop->iteration == 1) <span class="text-yellow-500">1</span>
+                            @elseif($loop->iteration == 2) <span class="text-gray-400">2</span>
+                            @elseif($loop->iteration == 3) <span class="text-orange-500">3</span>
+                            @else <span>{{ $loop->iteration }}</span>
                             @endif
                         </td>
                         <td class="px-6 py-3 text-base font-semibold text-gray-800 dark:text-white/90">{{
