@@ -13,7 +13,7 @@ class AhpCalculation extends Component
 {
     public $kriterias = [];
     public $inputMatriks = []; // Menyimpan inputan user (Skala 1-9)
-    
+
     // Hasil Perhitungan
     public $matriksAwal = [];
     public $jumlahKolom = [];
@@ -22,7 +22,7 @@ class AhpCalculation extends Component
     public $lambdaMax = 0;
     public $ci = 0;
     public $cr = 0;
-    
+
     public $sudahDihitung = false;
     public $isKonsisten = false;
 
@@ -30,7 +30,7 @@ class AhpCalculation extends Component
     {
         $this->kriterias = Kriteria::all();
         $savedMatriks = AhpMatriks::all();
-        
+
         if ($savedMatriks->isNotEmpty()) {
             // Jika ada data di database, muat ke dalam inputan
             foreach ($savedMatriks as $matriks) {
@@ -75,11 +75,11 @@ class AhpCalculation extends Component
                 } elseif (isset($this->inputMatriks[$k2->id][$k1->id]) && $this->inputMatriks[$k2->id][$k1->id] != '') {
                     $val_kebalikan = (float) $this->inputMatriks[$k2->id][$k1->id];
                     // PERBAIKAN: Mencegah error pembagian dengan 0
-                    $nilai = $val_kebalikan > 0 ? (1 / $val_kebalikan) : 1; 
+                    $nilai = $val_kebalikan > 0 ? (1 / $val_kebalikan) : 1;
                 } else {
                     $nilai = 1; // Fallback aman
                 }
-                
+
                 $this->matriksAwal[$k1->id][$k2->id] = $nilai;
                 $this->jumlahKolom[$k2->id] += $nilai;
             }
@@ -106,12 +106,12 @@ class AhpCalculation extends Component
         }
 
         $this->ci = ($this->lambdaMax - $n) / ($n - 1);
-        
+
         $ri_table = [1 => 0.00, 2 => 0.00, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.24, 7 => 1.32, 8 => 1.41, 9 => 1.45];
         $ri = $ri_table[$n] ?? 1.49;
 
         // PERBAIKAN: Mencegah error jika RI 0
-        $this->cr = $ri > 0 ? ($this->ci / $ri) : 0; 
+        $this->cr = $ri > 0 ? ($this->ci / $ri) : 0;
         $this->isKonsisten = $this->cr <= 0.1;
         $this->sudahDihitung = true;
 
@@ -144,14 +144,14 @@ class AhpCalculation extends Component
                     $nilai = (float) $this->inputMatriks[$k1->id][$k2->id];
                 } elseif (isset($this->inputMatriks[$k2->id][$k1->id]) && $this->inputMatriks[$k2->id][$k1->id] != '') {
                     $val_kebalikan = (float) $this->inputMatriks[$k2->id][$k1->id];
-                    $nilai = $val_kebalikan > 0 ? (1 / $val_kebalikan) : 1; 
+                    $nilai = $val_kebalikan > 0 ? (1 / $val_kebalikan) : 1;
                 } else {
                     $nilai = 1;
                 }
-                
+
                 // PERBAIKAN 1: Bulatkan nilai matriks 2 angka di belakang koma (Sesuai Proposal: 0.33, 0.20, 0.14)
                 $nilai_bulat = round($nilai, 2);
-                
+
                 $this->matriksAwal[$k1->id][$k2->id] = $nilai_bulat;
                 $this->jumlahKolom[$k2->id] += $nilai_bulat;
             }
@@ -165,7 +165,7 @@ class AhpCalculation extends Component
             $totalBaris = 0;
             foreach ($this->kriterias as $k2) {
                 $jKolom = $this->jumlahKolom[$k2->id] > 0 ? $this->jumlahKolom[$k2->id] : 1;
-                
+
                 // PERBAIKAN 2: Bulatkan hasil bagi menjadi 3 angka di belakang koma
                 $nilaiNormalisasi = round($this->matriksAwal[$k1->id][$k2->id] / $jKolom, 3);
                 $this->matriksNormalisasi[$k1->id][$k2->id] = $nilaiNormalisasi;
@@ -177,7 +177,7 @@ class AhpCalculation extends Component
 
         // 3. Menghitung Rasio Konsistensi (CR) sesuai gaya Proposal (Lewat WSV)
         $this->lambdaMax = 0;
-        
+
         foreach ($this->kriterias as $k1) {
             $wsv = 0;
             foreach ($this->kriterias as $k2) {
@@ -185,7 +185,7 @@ class AhpCalculation extends Component
                 $wsv += $this->matriksAwal[$k1->id][$k2->id] * $this->bobotEigen[$k2->id];
             }
             $wsv = round($wsv, 3); // Pembulatan WSV
-            
+
             // Lambda (λi) = WSV / Bobot Eigen
             $lambda_i = round($wsv / $this->bobotEigen[$k1->id], 3);
             $this->lambdaMax += $lambda_i;
@@ -196,13 +196,13 @@ class AhpCalculation extends Component
 
         // Menghitung CI dengan pembulatan 3 angka
         $this->ci = round(($this->lambdaMax - $n) / ($n - 1), 3);
-        
+
         $ri_table = [1 => 0.00, 2 => 0.00, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.24, 7 => 1.32, 8 => 1.41, 9 => 1.45];
         $ri = $ri_table[$n] ?? 1.49;
 
-        // Menghitung Final CR dengan pembulatan 3 angka (Agar dapat 0.039)
-        $this->cr = $ri > 0 ? round($this->ci / $ri, 3) : 0; 
-        
+        // Menghitung Final CR dengan pembulatan 3 angka
+        $this->cr = $ri > 0 ? round($this->ci / $ri, 3) : 0;
+
         $this->isKonsisten = $this->cr <= 0.1;
         $this->sudahDihitung = true;
 

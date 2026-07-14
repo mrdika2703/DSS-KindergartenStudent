@@ -26,6 +26,8 @@ class PenilaianImport implements ToCollection, WithHeadingRow
         $this->semester = $semester;
     }
 
+    // Konversi Skala Ordinal: mengubah nilai huruf (A/B/C/D) menjadi skala numerik (A=90, B=80, C=60, D=40)
+    // agar data kualitatif dari rapor dapat dihitung secara kuantitatif dalam proses DSS
     private function konversiHuruf($huruf)
     {
         $huruf = strtoupper(trim($huruf));
@@ -46,17 +48,17 @@ class PenilaianImport implements ToCollection, WithHeadingRow
         // 1. VALIDASI HEADER (KOLOM EXCEL)
         // ==========================================
         $template = new TemplateDataSiswa();
-        
+
         // Ambil header dari template dan ubah ke huruf kecil (karena WithHeadingRow mengubahnya jadi huruf kecil)
         $expectedHeaders = array_map('strtolower', $template->headings());
-        
+
         // Ambil header dari file yang diupload (diambil dari keys baris pertama)
         $firstRow = $rows->first()->toArray();
         $importedHeaders = array_keys($firstRow);
 
         // Cek selisih kolom (Apa yang ada di template tapi tidak ada di file upload)
         $missingHeaders = array_diff($expectedHeaders, $importedHeaders);
-        
+
         if (count($missingHeaders) > 0) {
             // Ambil maksimal 5 nama kolom yang hilang untuk pesan error agar tidak terlalu panjang
             $missingCols = implode(', ', array_slice($missingHeaders, 0, 5));
@@ -71,7 +73,7 @@ class PenilaianImport implements ToCollection, WithHeadingRow
         // ==========================================
         $validLetters = ['A', 'B', 'C', 'D'];
         $kunciNilaiHuruf = ['db', 'berenang', 'memanah', 'berkebun', 'menyanyi'];
-        
+
         // Kumpulkan otomatis nama-nama kolom nilai akademik & capaian
         $baseWords = ['agama', 'jati', 'math', 'quran', 'hadist', 'doa', 'p3ra', 'p2ra', 'capaian'];
         foreach ($expectedHeaders as $header) {
@@ -128,16 +130,24 @@ class PenilaianImport implements ToCollection, WithHeadingRow
                     ]
                 );
 
-                $rawAkademik = []; $rawAbsensi = []; $rawCapaian = []; $rawEkstra = [];
-                $totAkademik = 0; $cntAkademik = 0;
-                $totCapaian = 0; $cntCapaian = 0;
-                $totEkstra = 0; $cntEkstra = 0;
+                // Agregasi Nilai Per Kriteria: mengelompokkan kolom Excel ke 4 kriteria (C1=Akademik, C3=Capaian, C4=Ekstra),
+                // mengkonversi huruf ke numerik, lalu menghitung rata-rata sebagai nilai akhir masing-masing kriteria
+                $rawAkademik = [];
+                $rawAbsensi = [];
+                $rawCapaian = [];
+                $rawEkstra = [];
+                $totAkademik = 0;
+                $cntAkademik = 0;
+                $totCapaian = 0;
+                $cntCapaian = 0;
+                $totEkstra = 0;
+                $cntEkstra = 0;
 
                 foreach ($row as $key => $value) {
                     $kunciAkademik = ['agama', 'jati', 'math', 'quran', 'hadist', 'doa', 'p3ra', 'p2ra'];
                     foreach ($kunciAkademik as $kunci) {
                         if (str_starts_with($key, $kunci)) {
-                            $rawAkademik[$key] = $value; 
+                            $rawAkademik[$key] = $value;
                             if (!empty($value)) {
                                 $totAkademik += $this->konversiHuruf($value);
                                 $cntAkademik++;
@@ -145,7 +155,7 @@ class PenilaianImport implements ToCollection, WithHeadingRow
                             break;
                         }
                     }
-                    
+
                     if (str_starts_with($key, 'capaian')) {
                         $rawCapaian[$key] = $value;
                         if (!empty($value)) {
@@ -153,7 +163,7 @@ class PenilaianImport implements ToCollection, WithHeadingRow
                             $cntCapaian++;
                         }
                     }
-                    
+
                     if (in_array($key, ['db', 'berenang', 'memanah', 'berkebun', 'menyanyi'])) {
                         $rawEkstra[$key] = $value;
                         if (!empty($value)) {
@@ -163,6 +173,8 @@ class PenilaianImport implements ToCollection, WithHeadingRow
                     }
                 }
 
+                // Transformasi Nilai Absensi (C2): nilaiC2 = max(0, 100 - ((S+I+K) × 2))
+                // Setiap hari absen mengurangi 2 poin dari nilai sempurna 100, minimum 0
                 $s = (int) ($row['absensis'] ?? 0);
                 $i = (int) ($row['absensii'] ?? 0);
                 $k = (int) ($row['absensik'] ?? 0);
@@ -184,8 +196,10 @@ class PenilaianImport implements ToCollection, WithHeadingRow
                 $nilaiC4 = $cntEkstra > 0 ? ($totEkstra / $cntEkstra) : 0;
 
                 $kriteriaValues = [
-                    $kriteria_c1 => $nilaiC1, $kriteria_c2 => $nilaiC2, 
-                    $kriteria_c3 => $nilaiC3, $kriteria_c4 => $nilaiC4,
+                    $kriteria_c1 => $nilaiC1,
+                    $kriteria_c2 => $nilaiC2,
+                    $kriteria_c3 => $nilaiC3,
+                    $kriteria_c4 => $nilaiC4,
                 ];
 
                 foreach ($kriteriaValues as $kriteria_id => $nilai_akhir) {
@@ -204,5 +218,3 @@ class PenilaianImport implements ToCollection, WithHeadingRow
         }
     }
 }
-
-
